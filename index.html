@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>터진 글 생성기</title>
+<meta name="description" content="스레드 터진 글 302개로 만든 공식 12개. 소재만 넣으면 ChatGPT·Claude·Gemini가 초안 3개를 써 줘">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: 한 줄 도구 — 위에서 소재 넣고 → 바로 아래 결과 → 맨 아래 공식 12개(접힘) */
+:root{
+  --bg:#f6f6f4; --surface:#ffffff; --ink:#16171a; --muted:#6b6d73; --line:#e3e3df;
+  --heart:#e0244f; --heart-soft:#fde8ed; --chip:#efefec;
+  --display:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;
+  --body:"IBM Plex Sans KR",system-ui,-apple-system,"Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121315; --surface:#1b1c1f; --ink:#ececea; --muted:#9a9ca3; --line:#2c2d31;
+  --heart:#ff5577; --heart-soft:#3a1a22; --chip:#26272b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121315; --surface:#1b1c1f; --ink:#ececea; --muted:#9a9ca3; --line:#2c2d31;
+  --heart:#ff5577; --heart-soft:#3a1a22; --chip:#26272b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,7vw,48px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 .h{color:var(--heart)}
+h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0;text-wrap:balance}
+.lede{color:var(--muted);margin:8px 0 0}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.fact b{display:block;font-family:var(--display);font-weight:400;font-size:26px;line-height:1.2;font-variant-numeric:tabular-nums}
+.fact span{font-size:13px;color:var(--muted)}
+@media (max-width:560px){.facts{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:16px}
+label.lb{font-weight:700;font-size:14px;display:block;margin-bottom:6px}
+.hint{font-weight:400;color:var(--muted);font-size:13px}
+textarea,input[type=text],select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{min-height:96px;resize:vertical}
+textarea:focus,input:focus,select:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--heart);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:560px){.row{grid-template-columns:1fr}}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:inherit;font-weight:700;border-radius:10px;padding:11px 18px;cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:var(--bg)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line);font-weight:500}
+.btn:disabled{opacity:.5;cursor:default}
+.status{font-size:14px;color:var(--muted)}
+.results{display:flex;flex-direction:column;gap:12px}
+.res-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.tag-ex{font-size:12px;background:var(--chip);border-radius:6px;padding:2px 8px;color:var(--muted)}
+.draft{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.draft-top{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.ttag{font-size:13px;font-weight:700;color:var(--heart);background:var(--heart-soft);border-radius:6px;padding:3px 9px}
+.why{font-size:13px;color:var(--muted);margin:0}
+.post{white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;margin:0;font-size:15.5px;line-height:1.65;border-left:3px solid var(--line);padding-left:12px}
+.count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.count.over{color:var(--heart);font-weight:700}
+.copy{font:inherit;font-size:13px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:5px 10px;cursor:pointer}
+.lib{display:flex;flex-direction:column;gap:8px}
+details.t{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+details.t summary{list-style:none;cursor:pointer;padding:12px 14px;display:grid;grid-template-columns:2.4em 1fr auto;gap:10px;align-items:center}
+details.t summary::-webkit-details-marker{display:none}
+.tn{font-family:var(--display);font-size:20px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tt{min-width:0}
+.tt b{display:block}
+.tt small{color:var(--muted);font-size:13px}
+.best{font-size:13px;color:var(--heart);font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tbody{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.formula{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:14px;white-space:pre-wrap}
+.meta{font-size:13.5px;margin:0}
+.meta b{font-weight:700}
+.ex{font-size:14px}
+.ex .stat{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.small{font-size:13px;color:var(--muted)}
+.note{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+@media (prefers-reduced-motion:no-preference){.draft{animation:in .25s ease-out both}@keyframes in{from{transform:translateY(4px);opacity:.6}to{transform:none;opacity:1}}}
+.ai{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.ai .btn{width:100%;padding-left:8px;padding-right:8px}
+.ai .btn small{display:block;font-size:11px;font-weight:400;opacity:.75}
+.guide{display:none;background:var(--heart-soft);border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.6}
+.guide.on{display:block}
+.guide b{color:var(--heart)}
+@media (max-width:420px){.ai{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>터진 글 <span class="h">생성기</span></h1>
+    <p class="lede">@ceo_jinuk 스레드 글 2,232개 중 좋아요 50개 넘은 302개를 뜯어서 만든 12가지 공식이야. 소재만 넣고 쓰는 AI 버튼을 누르면, 맞는 공식을 골라 초안 3개를 써 줘</p>
+  </header>
+
+  <section class="facts" aria-label="분석에서 나온 숫자">
+    <div class="fact"><b>2.3배</b><span>터진 글 37%가 번호 리스트 (안 터진 글은 16%)</span></div>
+    <div class="fact"><b>댓글 2.7배</b><span>질문으로 끝나는 글의 댓글 중앙값 8개 vs 3개</span></div>
+    <div class="fact"><b>길이 무관</b><span>4줄 이하든 그 이상이든 좋아요 중앙값은 비슷 (15 vs 16)</span></div>
+  </section>
+
+  <section class="panel" aria-label="글 만들기">
+    <div>
+      <label class="lb" for="topic">오늘 쓸 소재 <span class="hint">한 줄이어도 되고, 메모를 통째로 붙여도 돼</span></label>
+      <textarea id="topic" placeholder="예) 피부과 원장인데 겨울에 보습크림을 아무리 발라도 건조한 사람들이 많음. 세안 후 3분 안에 바르는 게 핵심">피부과 원장인데 겨울에 보습크림을 아무리 발라도 건조한 사람들이 많음. 세안 후 3분 안에 바르는 게 핵심</textarea>
+    </div>
+    <div>
+      <span class="lb">이 글로 얻고 싶은 것</span>
+      <div class="chips" id="goals" role="group" aria-label="목적">
+        <button class="chip" aria-pressed="true" data-v="자동">알아서</button>
+        <button class="chip" aria-pressed="false" data-v="팔로워 늘리기">팔로워</button>
+        <button class="chip" aria-pressed="false" data-v="저장·리포스트(정보 확산)">저장·리포스트</button>
+        <button class="chip" aria-pressed="false" data-v="댓글·대화">댓글</button>
+        <button class="chip" aria-pressed="false" data-v="모객·신청">모객</button>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label class="lb" for="tpl">공식</label>
+        <select id="tpl"><option value="auto">소재에 맞게 자동 추천 (서로 다른 공식 3개)</option></select>
+      </div>
+      <div>
+        <label class="lb" for="tone">말투</label>
+        <select id="tone">
+          <option value="반말">반말 (스레드 기본)</option>
+          <option value="존댓말">존댓말</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label class="lb" for="callname">독자 호칭 <span class="hint">비우면 안 씀</span></label>
+        <input type="text" id="callname" value="쓰친들">
+      </div>
+      <div>
+        <label class="lb" for="me">내 계정 한 줄 소개 <span class="hint">선택</span></label>
+        <input type="text" id="me" placeholder="예) 강남 피부과 원장, 피부 상식 알려주는 계정">
+      </div>
+    </div>
+    <div class="actions">
+      <span class="lb" style="width:100%">쓰는 AI로 글 3개 뽑기 <span class="hint">무료 계정도 돼</span></span>
+      <div class="ai">
+        <button class="btn" data-ai="chatgpt">ChatGPT<small>로 쓰기</small></button>
+        <button class="btn" data-ai="claude">Claude<small>로 쓰기</small></button>
+        <button class="btn" data-ai="gemini">Gemini<small>로 쓰기</small></button>
+      </div>
+      <button class="btn ghost" id="copyPrompt">프롬프트만 복사</button>
+      <span class="status" id="status" aria-live="polite"></span>
+    </div>
+    <div class="guide" id="guide" role="status"><b>복사 완료!</b> 새로 열린 <span id="aiName">AI</span> 창 입력칸에 <b>붙여넣기</b>(PC는 Ctrl+V, 폰은 길게 눌러 붙여넣기) 하고 보내면 초안 3개가 나와.<br>그다음엔 "2번 더 짧게", "댓글 많이 달리게"처럼 대화로 고치면 돼. 창이 안 열렸으면 <a href="#" id="reopen">여기</a>를 눌러 줘</div>
+  </section>
+
+  <section class="results" aria-label="결과">
+    <div class="res-head"><h2 id="resTitle">이렇게 나와</h2><span class="tag-ex" id="exTag">예시 결과</span></div>
+    <div id="out"></div>
+  </section>
+
+  <section aria-label="공식 12개" style="display:flex;flex-direction:column;gap:12px">
+    <div class="res-head"><h2>터진 글 공식 12</h2><span class="small">눌러서 펼치기 · 숫자는 대표 글의 좋아요</span></div>
+    <div class="lib" id="lib"></div>
+  </section>
+
+  <p class="note">글은 초안이야. 숫자·경력·후기처럼 사실이 필요한 곳은 [ ]로 비워 두니까 내 진짜 경험으로 채워서 올려 줘. 예시 글은 구조만 참고하고 문장은 그대로 가져가지 마</p>
+</div>
+
+<script>
+const T=[
+ {id:"t01",name:"정체성 한 줄 제안",sub:"내 직업을 '친구 한 명'으로 파는 3줄",best:2200,goal:"팔로워",
+  formula:"[내 직업/분야] 친구 있어?\n없다면 나랑 친구하자\n[살면서 한 번은 필요해지는 순간]",
+  when:"희소한 직업·전문성이 있을 때. 설명 없이 3~4줄로 끝내",
+  ex:{t:"언론사 기자 친구 있으세요?\n없다면 저랑 친구해요\n살면서 한 번쯤은 연락할 일\n있으실 거에요",s:"좋아요 2,200 · 댓글 433"},
+  tip:"자랑하지 말고 '나중에 너한테 쓸모 있어'로 끝내야 팔로우가 눌려"},
+ {id:"t02",name:"반전 한 방 '특징'",sub:"흔한 말 → 마지막 줄 펀치",best:1200,goal:"댓글",
+  formula:"[사람들이 자주 하는 말/행동]\n하는 사람 특징\n[짧은 반전 한 줄]",
+  when:"업계에서 다들 아는 허세·착각을 콕 집을 때. 2~4줄",
+  ex:{t:"찐부자들은 제네시스 탄다\n찐부자들은 명품 안 산다\n말하는 사람들 특징\n찐부자 아님",s:"좋아요 1,200 · 댓글 224"},
+  tip:"마지막 줄은 다섯 글자 안팎. 설명 붙이면 맛이 죽어"},
+ {id:"t03",name:"저장각 번호 리스트",sub:"<누구에게 + 이득 N가지>",best:964,goal:"저장·리포스트",
+  formula:"<[대상]이 [얻는 것] N가지>\n1. 항목\n2. 항목\n…\n(선택) 또 있으면 댓글로 알려줘",
+  when:"사이트·책·루틴·체크리스트처럼 저장해 둘 정보. 리포스트가 제일 많이 나오는 공식",
+  ex:{t:"<최신작 많고 무료로 책 볼 수 있는 전자도서관>\n1. 경기도 사이버 도서관\n2. 샬롯 책방\n3. 교보e북\n4. 소상공인 지식배움터\n5. 리디\n6. 북큐브",s:"좋아요 964 · 리포스트 121"},
+  tip:"항목은 한 줄씩 짧게. 'A → B' 처방형(생각이 많다 → 적어라)도 잘 터져"},
+ {id:"t04",name:"좁은 공통점 소환",sub:"'○○ 있어?' 한 줄로 댓글 폭발",best:936,goal:"댓글·팔로워",
+  formula:"[좁은 공통점: 나이·띠·동네·직업] 있어?\n[그 사람들만 아는 공감 한 줄]\n묻지도 따지지도 말고 맞팔하자",
+  when:"같은 처지 사람을 모으고 싶을 때. 좁을수록 잘 됨",
+  ex:{t:"90년생 백말띠 있어?\n우리가 벌써 30대 중반이라니😮 같이 파이팅해볼까?\n묻지도 따지지도 않고, 쓰팔하자!",s:"좋아요 936 · 댓글 599"},
+  tip:"'사업하는 사람 있어?'보다 '90년생 사업가 있어?'가 더 세"},
+ {id:"t05",name:"행운 편지",sub:"'이 글이 보였다면 축하해'",best:759,goal:"공유",
+  formula:"이 글이 보였다면 축하해!\n[앞으로 생길 좋은 일 2~3줄]\n[소중한 한 명에게만 보내줘]",
+  when:"연초·월초·시험철처럼 운을 빌고 싶은 시기. 자주 쓰면 효과 떨어짐",
+  ex:{t:"혹시 이 글이 너한테 보였다면 축하해!\n이제부터 좋은 일이\n이상할 정도로 자주 생길 거야\n막혔던 일은 풀리고\n기다리던 연락은 오고…",s:"좋아요 759 · 리포스트 34"},
+  tip:"내 분야 버전으로 바꾸면 덜 뻔해 (예: '이 글 본 사장님 이번 달 매출 오른다')"},
+ {id:"t06",name:"들은 얘기 + 너는 어때?",sub:"장면 하나 던지고 의견 묻기",best:315,goal:"댓글",
+  formula:"[최근 보거나 들은 장면 2~3줄]\n[내 생각 살짝, 단정 말고]\n○○들은 어떻게 생각해?",
+  when:"업계 이슈·세대 차이·연애·직장처럼 다들 한마디 할 수 있는 주제",
+  ex:{t:"최근 카페에서 여자 두 명이\n결혼에 대한 대화하는 걸 들었는데…\n왠지 모르게 씁쓸하다는 생각이 들었어\n쓰친들은 어떻게 생각해?",s:"좋아요 147 · 댓글 113"},
+  tip:"내 결론을 세게 박으면 싸움 나. '난 이런데 너는?' 정도로"},
+ {id:"t07",name:"일상 반전 에피소드",sub:"평범한 장면 → 마지막 줄 웃음",best:245,goal:"팔로워",
+  formula:"[오늘 본 장면 묘사 2~3줄]\n[감정 한 줄]\n[마지막 줄 반전 또는 소소한 행복]",
+  when:"정보 글 사이사이 사람 냄새 낼 때. 관계·근황 글이 팔로우를 부름",
+  ex:{t:"지하철에서 한 커플이 잠들어 있네\n여자친구가 남자친구 손을 꼭 잡고 어깨에 기대서\n잠들어 있는데 참 보기가 좋고 부럽다\n근데 더 중요한 건 지하철 반대로 탔다",s:"좋아요 245"},
+  tip:"반전은 나를 낮추는 쪽이 제일 잘 먹혀"},
+ {id:"t08",name:"축하·응원 요청",sub:"숫자나 소식 + '축하해줄 수 있을까?'",best:266,goal:"팔로워·댓글",
+  formula:"○○들, 나 축하해줄 수 있을까?\n[무슨 일인지 + 숫자]\n[왜 나한테 의미 있는지 1~2줄]\n응원 한마디 부탁해",
+  when:"팔로워 목표 직전, 첫 강의, 수상, 오픈처럼 진짜 소식 있을 때",
+  ex:{t:"8,000명까지 36명 남았다!\n나 올해 대박 날 건데 저점매수할 쓰친 없을까? 잊지 않을게",s:"좋아요 153 · 리포스트 62"},
+  tip:"'○명 남았다'는 숫자가 있으면 사람들이 끝까지 밀어줘"},
+ {id:"t09",name:"무료 나눔 (팔로우+댓글)",sub:"비싸게 산 자료를 공짜로",best:189,goal:"댓글·팔로워",
+  formula:"혹시 [고민] 있는 ○○ 있어?\n내가 [직접 써 본/돈 주고 산] 자료인데\n[가치: 가격·효과 한 줄]\n무료로 나눠볼게\n팔로우하고 댓글 남겨줘",
+  when:"진짜 나눌 자료(PDF·템플릿·체크리스트)가 있을 때만",
+  ex:{t:"사업하는 쓰친이들 중에 550만 원짜리 강의에서 활용하는 PDF 파일 무료인데 받아볼 사람 있어? 있으면 댓글 달아줘!",s:"좋아요 171 · 댓글 707"},
+  tip:"댓글 수는 최강인데 약속한 자료는 꼭 보내야 다음에도 먹혀"},
+ {id:"t10",name:"번개·모임 모집",sub:"'○○할 사람?' + 부담 없음",best:411,goal:"모객",
+  formula:"혹시 [날짜/상황]에 [같이 할 일] 할 사람 있어?\n[왜 하는지: 혼자보다 같이]\n거창한 거 아니고 부담 없이\n관심 있으면 댓글이나 DM 줘",
+  when:"오프라인 만남·스터디·클래스 모객. 날짜·장소는 공지 글로 따로",
+  ex:{t:"아직까지 크리스마스 아무 계획 없는 사람들의 모임",s:"좋아요 411 · 댓글 93"},
+  tip:"첫 글은 '관심 있어?'만, 상세 공지는 다음 글. 두 번 나눠야 반응이 두 번 와"},
+ {id:"t11",name:"계정 추천 (샤라웃)",sub:"초보에게 '팔로우할 계정 N'",best:125,goal:"관계·팔로워",
+  formula:"이제 막 시작했다면 꼭 팔로우해야 할 계정\n1. @아이디 한 줄 소개\n…\n또 추천할 계정 있으면 댓글로 (셀프 추천 환영)",
+  when:"내 분야 사람들과 친해지고 싶을 때. 소개받은 사람들이 퍼 날라 줌",
+  ex:{t:"이제 막 스레드를 시작했다면\n꼭 팔로우 해야 할 계정에\n댓글을 달아준 쓰친들 홍보 타임\n1. @… 두바이 부동산\n2. @… 교육 정보 …",s:"좋아요 125 · 리포스트 25"},
+  tip:"태그된 사람에게 알림이 가서 첫 반응이 빨라"},
+ {id:"t12",name:"인용 + 한 줄 코멘트",sub:"남의 터진 글에 내 시선 얹기",best:79000,goal:"노출",
+  formula:"[인용할 글 첨부]\n[내 감상 한 줄: 멋지다/공감/저장!]\n(선택) 내 분야와 연결한 한 줄",
+  when:"이미 터지고 있는 글을 봤을 때. 원글 반응에 올라탐",
+  ex:{t:"너무 멋진 일이라 대한청년일보에서도\n기사로 작성하게 되었어\n내 기사도 많이 읽어주고 소식도 널리 알려줘!\n(+ 원글 인용)",s:"좋아요 7.9만 (원글 반응 포함)"},
+  tip:"좋아요 숫자엔 원글 반응이 섞여 있어. 생성기는 코멘트 부분만 써 줘"}
+];
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>n>=10000?(n/10000).toFixed(1).replace(/\.0$/,"")+"만":n.toLocaleString("ko-KR");
+
+// 공식 선택 목록 + 라이브러리
+const sel=$("#tpl");
+T.forEach((t,i)=>{const o=document.createElement("option");o.value=t.id;o.textContent=`${i+1}. ${t.name}`;sel.append(o)});
+const lib=$("#lib");
+T.forEach((t,i)=>{
+  const d=document.createElement("details");d.className="t";
+  d.innerHTML=`<summary><span class="tn">${String(i+1).padStart(2,"0")}</span><span class="tt"><b>${esc(t.name)}</b><small>${esc(t.sub)}</small></span><span class="best">♥ ${fmt(t.best)}</span></summary>
+  <div class="tbody">
+    <div class="formula">${esc(t.formula)}</div>
+    <p class="meta"><b>언제</b> ${esc(t.when)}</p>
+    <div class="ex"><div class="post">${esc(t.ex.t)}</div><div class="stat">@ceo_jinuk 실제 글 · ${esc(t.ex.s)}</div></div>
+    <p class="meta"><b>요령</b> ${esc(t.tip)}</p>
+    <div><button class="copy" data-use="${t.id}">이 공식으로 쓰기</button></div>
+  </div>`;
+  lib.append(d);
+});
+lib.addEventListener("click",e=>{const b=e.target.closest("[data-use]");if(!b)return;sel.value=b.dataset.use;$("#topic").focus();$("#topic").scrollIntoView({behavior:"smooth",block:"center"})});
+
+// 목적 칩
+let goal="자동";
+$("#goals").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;
+  document.querySelectorAll("#goals .chip").forEach(c=>c.setAttribute("aria-pressed",c===b?"true":"false"));goal=b.dataset.v});
+
+// 입력 기억(이 기기만)
+const KEY="tg-form";
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s){["me","callname","tone"].forEach(k=>{if(s[k]!=null)$("#"+k).value=s[k]})}}catch(e){}
+const remember=()=>{try{localStorage.setItem(KEY,JSON.stringify({me:$("#me").value,callname:$("#callname").value,tone:$("#tone").value}))}catch(e){}};
+
+function buildPrompt(){
+  const topic=$("#topic").value.trim();
+  const pick=sel.value;
+  const call=$("#callname").value.trim();
+  const lib=T.map((t,i)=>`[${t.id}] ${t.name} — ${t.sub}\n공식:\n${t.formula}\n언제: ${t.when}\n요령: ${t.tip}\n참고 예시(구조만 참고, 문장 복사 금지):\n${t.ex.t}`).join("\n\n");
+  const ask = pick==="auto"
+    ? "소재에 가장 잘 맞는 공식 3개를 서로 다르게 골라 각 공식으로 초안 1개씩, 총 3개를 써."
+    : `반드시 [${pick}] 공식 하나로만, 첫 줄 후킹을 서로 다르게 바꾼 초안 3개를 써.`;
+  return `너는 스레드(Threads)에서 반응이 터진 글 302개를 분석해 만든 공식으로 초안을 쓰는 작가야.
+
+# 공식 12개
+${lib}
+
+# 데이터에서 나온 규칙
+- 첫 줄이 전부다. 첫 줄만 보고 멈추게 써. 제목처럼 꺾쇠 <> 를 써도 좋아
+- 번호 리스트는 저장·리포스트를 부른다 (터진 글의 37%). 항목은 한 줄씩 짧게
+- 댓글을 원하면 마지막 줄을 질문으로 끝내 (댓글 2.7배)
+- 길이는 상관없지만 500자를 절대 넘기지 마 (줄바꿈 포함). 한 줄은 25자 안팎에서 끊어
+- 문장 끝 마침표는 찍지 마. 물음표·느낌표는 괜찮아. 이모지는 0~1개
+- 소재에 없는 숫자·경력·성과·후기는 지어내지 말고 [여기에 실제 숫자] 처럼 대괄호로 비워 둬
+- 예시 글의 문장을 그대로 쓰지 말고 구조만 빌려
+- 해시태그·영업 문구(상담 문의, DM 주세요 남발) 금지. 모객 목적일 때만 '관심 있으면 댓글' 정도 허용
+
+# 작성 조건
+- 말투: ${$("#tone").value}
+- 독자 호칭: ${call?`"${call}" (필요할 때만 자연스럽게)`:"쓰지 않음"}
+- 이 글로 얻고 싶은 것: ${goal==="자동"?"소재에 맞게 판단":goal}
+${$("#me").value.trim()?`- 글쓴이 계정 소개: ${$("#me").value.trim()}`:""}
+
+# 소재
+${topic}
+
+# 할 일
+${ask}
+
+# 출력 형식
+JSON 하나만. 다른 말 금지.
+{"drafts":[{"template":"t03","why":"이 공식을 고른 이유 한 문장","text":"줄바꿈은 \\n 으로 넣은 글 전문"}, ...3개]}`;
+}
+
+function render(drafts,example){
+  const out=$("#out");out.textContent="";
+  $("#exTag").hidden=!example;
+  drafts.forEach((d,i)=>{
+    const t=T.find(x=>x.id===d.template);
+    const text=String(d.text||"").replace(/\\n/g,"\n").trim();
+    const n=[...text].length;
+    const c=document.createElement("article");c.className="draft";c.style.animationDelay=(i*60)+"ms";
+    const top=document.createElement("div");top.className="draft-top";
+    const tag=document.createElement("span");tag.className="ttag";tag.textContent=t?`${T.indexOf(t)+1}. ${t.name}`:"공식";
+    const right=document.createElement("div");right.style.cssText="display:flex;gap:8px;align-items:center";
+    const cnt=document.createElement("span");cnt.className="count"+(n>500?" over":"");cnt.textContent=`${n} / 500자`;
+    const cp=document.createElement("button");cp.className="copy";cp.textContent="복사";
+    cp.onclick=async()=>{try{await navigator.clipboard.writeText(text);cp.textContent="복사됨"}catch(e){const r=document.createRange();r.selectNodeContents(p);const s=getSelection();s.removeAllRanges();s.addRange(r);cp.textContent="선택됨 · Ctrl+C"}setTimeout(()=>cp.textContent="복사",1600)};
+    right.append(cnt,cp);top.append(tag,right);
+    const why=document.createElement("p");why.className="why";why.textContent=d.why||"";
+    const p=document.createElement("p");p.className="post";p.textContent=text;
+    c.append(top,why,p);out.append(c);
+  });
+}
+
+// 예시 결과 (첫 화면)
+render([
+ {template:"t03",why:"보습 순서는 저장해 두고 다시 보는 정보라 리스트가 맞아",text:"<보습크림 발라도 건조한 사람이 놓치는 3가지>\n1. 세안 후 3분 지나서 바름 → 3분 안에\n2. 크림만 바름 → 토너로 먼저 물기\n3. 손으로 문지름 → 손바닥으로 눌러 흡수\n피부과에서 매일 하는 말인데\n은근 다들 반대로 하더라"},
+ {template:"t02",why:"다들 하는 착각을 마지막 줄로 뒤집으면 댓글이 붙어",text:"보습크림 비싼 거 쓰는데\n아직도 건조하다는 사람 특징\n세수하고 핸드폰부터 봄"},
+ {template:"t06",why:"진료실 장면 하나로 공감을 모으고 질문으로 끝내",text:"오늘 진료실에서\n크림을 하루 다섯 번 바르는데도\n얼굴이 땅긴다는 분을 만났어\n알고 보니 세안하고 [ ]분 뒤에 바르시더라\n순서만 바꿔도 달라지는데\n쓰친들은 세수하고 크림까지 몇 분 걸려?"}
+],true);
+
+const AI={chatgpt:{name:"ChatGPT",url:"https://chatgpt.com/"},claude:{name:"Claude",url:"https://claude.ai/new"},gemini:{name:"Gemini",url:"https://gemini.google.com/app"}};
+let last=null;
+function chatPrompt(){return buildPrompt().replace(/# 출력 형식[\s\S]*$/,"# 출력 형식\n초안 3개를 ① ② ③으로 나눠서, 각각 '공식 이름 — 고른 이유 한 줄'을 먼저 쓰고, 그 아래 글 전문(코드블록 없이 바로 복사해서 올릴 수 있게), 마지막에 (글자 수: 000자)를 써. 서론·인사는 쓰지 마. 맨 끝에 '마음에 드는 번호 + 고칠 점을 말해 줘' 한 줄.")}
+function copyText(p){
+  // 동기 복사(새 창 열기 전, 클릭 안에서)
+  let ok=false;
+  const ta=document.createElement("textarea");ta.value=p;ta.setAttribute("readonly","");ta.style.cssText="position:fixed;top:0;left:0;opacity:0";document.body.append(ta);ta.select();ta.setSelectionRange(0,p.length);
+  try{ok=document.execCommand("copy")}catch(e){}
+  ta.remove();
+  if(!ok&&navigator.clipboard){navigator.clipboard.writeText(p).catch(()=>{});ok=true}
+  return ok;
+}
+function ready(){
+  if(!$("#topic").value.trim()){$("#status").textContent="소재를 먼저 적어 줘";$("#topic").focus();return false}
+  remember();return true;
+}
+document.querySelectorAll("[data-ai]").forEach(b=>b.onclick=()=>{
+  if(!ready())return;
+  const ai=AI[b.dataset.ai];last=ai;
+  const ok=copyText(chatPrompt());
+  window.open(ai.url,"_blank","noopener");
+  $("#aiName").textContent=ai.name;$("#guide").classList.add("on");
+  $("#status").textContent=ok?"":"복사가 막혔어. 「프롬프트만 복사」를 눌러 줘";
+});
+$("#reopen").onclick=e=>{e.preventDefault();if(last)window.open(last.url,"_blank","noopener")};
+$("#copyPrompt").onclick=()=>{
+  if(!ready())return;
+  $("#status").textContent=copyText(chatPrompt())?"복사됨! 쓰는 AI에 붙여넣어 줘":"복사가 막혔어";
+};
+</script>
+</body>
+</html>

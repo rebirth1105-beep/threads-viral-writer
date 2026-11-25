@@ -3,7 +3,13 @@
 스레드 글 2,232개 중 반응이 터진 302개를 분석해 만든 **공식 12개**로,
 소재만 넣으면 바로 올릴 수 있는 스레드 글 초안 3개를 써 주는 Claude 스킬입니다.
 
-## 📥 다운로드
+## 🌐 바로 쓰기 (설치 없음)
+
+👉 **https://rebirth1105-beep.github.io/threads-viral-writer/**
+
+소재 입력 → ChatGPT·Claude·Gemini 중 쓰는 AI 버튼 → 새 창에 붙여넣기 → 초안 3개
+
+## 📥 Claude 스킬로 설치 (선택)
 
 👉 **[threads-viral-writer.zip 내려받기](https://github.com/rebirth1105-beep/threads-viral-writer/raw/main/threads-viral-writer.zip)**
 
